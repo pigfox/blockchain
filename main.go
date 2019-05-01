@@ -4,18 +4,28 @@ import (
 	"fmt"
 )
 
-func main(){
-	setBlock(1, "Genesis block", "", 0)
-	blockchain.Blocks = append(blockchain.Blocks, *block)
-	blockchain.Difficulty = 4
-	values := []string {"d.duck", "dumbo", "clown", "cod", "omaha, omaha", "double", "fake", "reverse"}
+func main() {
+	b := block.genesisBlock()
+	chain := blockchain.factory(*b)
+	chain.createTransaction(transaction.factory(testUserAddress2, testUserAddress, 200))
+	chain.createTransaction(transaction.factory(testUserAddress, testUserAddress2, 500))
 
-	for _, value := range values {
-		hash := fmt.Sprintf("%s", string(blockchain.Blocks[len(blockchain.Blocks)-1].Hash))
-		index := blockchain.Blocks[len(blockchain.Blocks)-1].Index + 1
-		setBlock(index, value, hash, block.Nonce)
-		blockchain.AddBlock(*block)
+	for i := 1; i < numBlocks; i++ {
+		newBlock := block.factory(block.timeStamp(), block.Transactions, block.PreviousHash)
+		chain.AddBlock(*newBlock)
 	}
-	inspect()
-	checkValid()
+
+	blockchain.inspect(chain)
+	blockchain.checkValid()
+	println("\n================================================\n")
+
+	print("\nStarting the miner...\n")
+	chain.minePendingTransactions(testUserAddress)
+	balance := chain.getAddressBalance(testUserAddress)
+	print("\nBalace of " + testUserAddress + " is:" + fmt.Sprintf("%f", balance))
+
+	print("\nStarting the miner again...\n")
+	chain.minePendingTransactions(testUserAddress)
+	balance2 := chain.getAddressBalance(testUserAddress)
+	print("\nBalace of " + testUserAddress + " is:" + fmt.Sprintf("%f", balance2))
 }
